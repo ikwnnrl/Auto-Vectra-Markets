@@ -1,0 +1,60 @@
+(async function() {
+    // --- KONFIGURASI ---
+    const JEDA_PER_CLAIM = 15000; // Jeda 15 detik penuh
+    // -------------------
+
+    console.log("%c[System] Bot Auto-Claim Aktif. Jeda: 15 Detik per aksi.", "color: #5BC0EB; font-weight: bold;");
+
+    async function runClaimProcess() {
+        // 1. Deteksi semua tombol yang mengandung teks "Claim"
+        const allButtons = Array.from(document.querySelectorAll('button'));
+        const claimButtons = allButtons.filter(btn => {
+            return btn.innerText.trim().toUpperCase() === 'CLAIM' && btn.offsetParent !== null;
+        });
+
+        const sisaHadiah = claimButtons.length;
+
+        // JIKA TIDAK ADA TOMBOL CLAIM: BERHENTI
+        if (sisaHadiah === 0) {
+            console.log("%c[Finished] Tidak ada lagi tombol Claim. Script berhenti otomatis.", "color: #FF4D4F; font-weight: bold; font-size: 14px;");
+            return; 
+        }
+
+        console.log(`%c[Detected] Ada ${sisaHadiah} hadiah tersedia. Memproses satu...`, "color: #27EF67;");
+
+        // 2. Ambil tombol pertama dari daftar
+        const targetBtn = claimButtons[0];
+
+        try {
+            // Scroll otomatis ke tombol agar terlihat di layar
+            targetBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            console.log("%c[Action] Mengklik tombol Claim...", "color: yellow;");
+            targetBtn.click();
+
+            // 3. Jeda 15 detik sebelum mencari tombol berikutnya
+            console.log(`%c[Wait] Sukses klik. Menunggu 15 detik agar transaksi selesai...`, "color: #A5A4FF;");
+            
+            // Visual countdown sederhana di console
+            let countdown = 15;
+            const timer = setInterval(() => {
+                countdown--;
+                if(countdown > 0) console.log(`   ... ${countdown} detik tersisa`);
+                if(countdown <= 0) clearInterval(timer);
+            }, 1000);
+
+            await new Promise(r => setTimeout(r, JEDA_PER_CLAIM));
+
+            // Panggil kembali fungsi untuk mengecek tombol selanjutnya
+            runClaimProcess();
+            
+        } catch (err) {
+            console.log("%c[Error] Kendala teknis, mencoba re-scan dalam 3 detik...", "color: red;");
+            await new Promise(r => setTimeout(r, 3000));
+            runClaimProcess();
+        }
+    }
+
+    // Jalankan bot pertama kali
+    runClaimProcess();
+})();

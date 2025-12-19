@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "Vectra Auto-Bot Pro",
+  "version": "3.0",
+  "permissions": ["scripting", "activeTab"],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
