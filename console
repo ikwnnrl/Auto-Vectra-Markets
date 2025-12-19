@@ -1,0 +1,84 @@
+(function() {
+    // --- KONFIGURASI ---
+    const NILAI_WAGER = "30";         
+    const JEDA_MODAL = 2000;          
+    const JEDA_SETELAH_CONFIRM = 10000; // Jeda 10 detik setelah klik confirm
+    // -------------------
+
+    console.log("%c[System] Bot Monitoring Aktif. Script akan berhenti jika tantangan habis.", "color: #5BC0EB; font-weight: bold;");
+
+    async function startAutoBot() {
+        // 1. Cari semua kartu tantangan yang ada
+        const allCards = document.querySelectorAll('.predication-game-card');
+        
+        // JIKA TIDAK ADA TANTANGAN: STOP SCRIPT
+        if (allCards.length === 0) {
+            console.log("%c[Finished] Tidak ada tantangan terdeteksi. Script dihentikan.", "color: #FF4D4F; font-weight: bold;");
+            return; // Berhenti total
+        }
+
+        console.log(`%c[Detected] Ditemukan ${allCards.length} tantangan. Memulai proses...`, "color: #27EF67;");
+        
+        for (let i = 0; i < allCards.length; i++) {
+            const card = allCards[i];
+            
+            // Cek apakah kartu masih aktif di layar
+            if (!card.offsetParent) continue; 
+
+            try {
+                console.log(`%c[Proses] Mengerjakan kartu ke-${i + 1} dari ${allCards.length}...`, "color: yellow;");
+
+                // STEP 1: KLIK YES
+                const yesBtn = Array.from(card.querySelectorAll('button'))
+                    .find(btn => btn.innerText.trim().toUpperCase() === 'YES');
+                
+                if (!yesBtn) {
+                    console.log("   - Tombol YES tidak ditemukan, lanjut ke kartu berikutnya.");
+                    continue;
+                }
+                yesBtn.click();
+
+                await new Promise(r => setTimeout(r, JEDA_MODAL));
+
+                // STEP 2: ISI WAGER 30
+                const inputField = document.getElementById('wagerInput');
+                if (inputField) {
+                    inputField.value = NILAI_WAGER;
+                    inputField.dispatchEvent(new Event('input', { bubbles: true }));
+                    inputField.dispatchEvent(new Event('change', { bubbles: true }));
+                    console.log(`   - Wager diisi: ${NILAI_WAGER}`);
+                }
+
+                await new Promise(r => setTimeout(r, 800));
+
+                // STEP 3: KLIK CONFIRM
+                const confirmBtn = Array.from(document.querySelectorAll('button'))
+                    .find(btn => btn.innerText.trim().toUpperCase() === 'CONFIRM');
+
+                if (confirmBtn && !confirmBtn.disabled) {
+                    confirmBtn.click();
+                    console.log(`%c   - Sukses Confirm! Menunggu 10 detik sebelum tantangan berikutnya...`, "color: #27EF67;");
+                    
+                    // JEDA 10 DETIK
+                    await new Promise(r => setTimeout(r, JEDA_SETELAH_CONFIRM));
+                } else {
+                    console.log("   - Tombol Confirm tidak aktif (mungkin limit atau saldo), lanjut...");
+                }
+
+            } catch (e) {
+                console.log("   - Terjadi kendala pada kartu ini, melewati...");
+            }
+        }
+
+        // Setelah batch ini selesai, lakukan pengecekan terakhir
+        console.log("%c[Batch Selesai] Mengecek apakah masih ada tantangan baru...", "color: #A5A4FF;");
+        
+        // Panggil kembali untuk memastikan tidak ada yang terlewat (misal ada tantangan baru muncul saat proses)
+        // Jika scan berikutnya kosong, script akan berhenti di baris 'return' di atas.
+        await new Promise(r => setTimeout(r, 2000));
+        startAutoBot();
+    }
+
+    // Jalankan bot
+    startAutoBot();
+})();
